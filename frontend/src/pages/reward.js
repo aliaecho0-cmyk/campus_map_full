@@ -9,7 +9,7 @@ import './reward.css';
 import { getRewardStatus, getClaimToken } from '../services/api.js';
 import { localizeBadge, t } from '../i18n.js';
 import { getEventEndAt } from '../services/auth.js';
-import { setOnProgressChanged } from '../services/boothView.js';
+import { setOnProgressChanged, setOnViewStatus, getPendingReported } from '../services/boothView.js';
 import QRCode from 'qrcode';
 
 function escapeHtml(s) {
@@ -58,6 +58,11 @@ class RewardPage {
       </div>`;
 
     setOnProgressChanged(() => this.refresh());
+    this.pendingCount = getPendingReported();
+    setOnViewStatus(({ pending }) => {
+      this.pendingCount = pending;
+      this.renderBadge();
+    });
     this.updateCountdown();
     if (this.eventEndAt) this.timer = setInterval(() => this.updateCountdown(), 30000);
     this.refresh();
@@ -109,11 +114,14 @@ class RewardPage {
     const status = b.unlocked
       ? `<span class="badge-status ok">${t('badgeUnlocked')}</span>`
       : `<span class="badge-status">${escapeHtml(name)}</span>`;
+    const countLabel = this.pendingCount > 0 ? `${count}+` : `${count}`;
+    const syncHint = this.pendingCount > 0 ? `<div class="badge-syncing">${t('syncingBadge')}</div>` : '';
     body.innerHTML = `
       <div class="badge-name">${escapeHtml(name)} ${status}</div>
       <div class="badge-rule">${t('badgeRule')}</div>
-      <div class="badge-count">${t('viewedBooths', { count, required })}</div>
-      <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+      <div class="badge-count">${t('viewedBooths', { count: countLabel, required })}</div>
+      <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+      ${syncHint}`;
   }
 
   renderClaim(err) {
@@ -192,6 +200,7 @@ class RewardPage {
     this.destroyed = true;
     if (this.timer) clearInterval(this.timer);
     setOnProgressChanged(null);
+    setOnViewStatus(null);
     this.el.innerHTML = '';
   }
 }
