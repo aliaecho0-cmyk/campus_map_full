@@ -8,9 +8,8 @@
 import './reward.css';
 import { getRewardStatus, getClaimToken } from '../services/api.js';
 import { localizeBadge, t } from '../i18n.js';
-import { getEventEndAt } from '../services/auth.js';
+import { getEventEndAt, requireLogin } from '../services/auth.js';
 import { setOnProgressChanged, setOnViewStatus, getPendingReported } from '../services/boothView.js';
-import QRCode from 'qrcode';
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
@@ -64,8 +63,10 @@ class RewardPage {
       this.renderBadge();
     });
     this.updateCountdown();
-    if (this.eventEndAt) this.timer = setInterval(() => this.updateCountdown(), 30000);
+    // The event deadline may arrive after background login completes.
+    this.timer = setInterval(() => this.updateCountdown(), 30000);
     this.refresh();
+    return this;
   }
 
   updateCountdown() {
@@ -79,6 +80,8 @@ class RewardPage {
     let err = null;
     let data = null;
     try {
+      await requireLogin();
+      if (this.destroyed) return;
       data = await getRewardStatus();
     } catch (e) {
       err = e;
@@ -105,6 +108,16 @@ class RewardPage {
     if (err || !b) {
       const msg = err ? (err && err.message) || t('networkError') : t('loading');
       body.innerHTML = `<div class="reward-empty">${escapeHtml(msg)}</div>`;
+      if (err) {
+        const retry = document.createElement('button');
+        retry.className = 'btn-primary';
+        retry.textContent = t('retry');
+        retry.addEventListener('click', () => {
+          retry.disabled = true;
+          this.refresh();
+        });
+        body.appendChild(retry);
+      }
       return;
     }
     const required = b.requiredUniqueBooths || 0;
@@ -189,6 +202,8 @@ class RewardPage {
   async renderQr(imgEl, token) {
     if (!imgEl || !token) return;
     try {
+      const { default: QRCode } = await import('qrcode');
+      if (this.destroyed || !imgEl.isConnected) return;
       const url = await QRCode.toDataURL(token, { width: 200, margin: 2 });
       if (!this.destroyed && imgEl.isConnected) imgEl.src = url;
     } catch (e) {

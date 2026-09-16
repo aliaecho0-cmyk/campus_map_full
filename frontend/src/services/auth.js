@@ -9,7 +9,7 @@
  * 依赖：services/api.js（studentLogin / getAuthToken / setAuthToken / clearAuthToken）
  */
 
-import { getAuthToken, clearAuthToken, studentLogin } from './api.js';
+import { ApiError, getAuthToken, clearAuthToken, studentLogin } from './api.js';
 import { state } from '../state.js';
 import { t } from '../i18n.js';
 
@@ -23,6 +23,7 @@ const DEVICE_ID_RE = /^dev_\d+_[A-Za-z0-9]{8}$/;
 
 /** 生成中的登录请求（去重，避免重复调用） */
 let inFlight = null;
+let lastLoginError = null;
 
 /* ---------- 存储助手（与 adapter/wx.js 的 storage 语义一致） ---------- */
 
@@ -136,7 +137,7 @@ function showNotice(message) {
 }
 
 /** 只读接口，供展示层判断是否需要提示 */
-const NOTICEABLE_CODES = new Set(['EVENT_NOT_ACTIVE', 'EVENT_NOT_FOUND', 'NETWORK_ERROR']);
+const NOTICEABLE_CODES = new Set(['EVENT_NOT_ACTIVE', 'EVENT_NOT_FOUND', 'NETWORK_ERROR', 'REQUEST_TIMEOUT']);
 
 /**
  * 确保已登录（学生无感登录）。
@@ -163,10 +164,13 @@ export function ensureLogin() {
   inFlight = (async () => {
     try {
       const res = await studentLogin(getOrCreateDeviceId());
+      if (!res || getAuthToken() !== res.token) return (state && state.user) || null;
+      lastLoginError = null;
       setEventEndAt(res.eventEndAt);
       persistUser(res.user || null);
       return (state && state.user) || null;
     } catch (e) {
+      lastLoginError = e;
       if (e && e.code && NOTICEABLE_CODES.has(e.code)) {
         showNotice(e.message || t('networkError'));
       }
@@ -178,12 +182,20 @@ export function ensureLogin() {
   return inFlight;
 }
 
-/**
- * 退出登录（清除 token / 用户 / 截止时间；保留 deviceId 以维持设备身份）。
- */
+/** Only API-dependent features await login; static pages remain available. */
+export async function requireLogin() {
+  const user = await ensureLogin();
+  if (!getAuthToken()) {
+    throw lastLoginError || new ApiError('AUTH_REQUIRED', t('err_AUTH_REQUIRED'));
+  }
+  return user;
+}
+
+/** 退出登录，保留 deviceId 以维持设备身份。 */
 export function logout() {
   clearAuthToken();
   lsRemove(EVENT_END_AT_KEY);
   lsRemove(USER_KEY);
+  lsRemove('user_role');
   if (state) state.user = null;
 }

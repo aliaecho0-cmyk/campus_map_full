@@ -1,4 +1,5 @@
 import { recordBoothView } from './api.js';
+import { requireLogin } from './auth.js';
 import { showToast } from '../utils/toast.js';
 import { t } from '../i18n.js';
 
@@ -97,6 +98,7 @@ export function startViewSession(boothId, delayMs = 3000) {
     let data = null;
     let err = null;
     try {
+      await requireLogin();
       data = await recordBoothView(EVENT_ID, id);
     } catch (e) {
       err = e;

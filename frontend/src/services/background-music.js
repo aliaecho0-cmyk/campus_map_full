@@ -1,49 +1,53 @@
 import bgmSrc from '../../地图相关素材/Mossy Barn Loop.mp3';
 
-const audio = new Audio(bgmSrc);
-audio.loop = true;
-audio.preload = 'auto';
-audio.volume = 0.55;
+// Create the player only when playback is requested, keeping audio off the initial download.
+let audio = null;
 
 const listeners = new Set();
 
 function emit() {
-  const playing = !audio.paused;
+  const playing = !!audio && !audio.paused;
   listeners.forEach((listener) => listener(playing));
 }
 
-audio.addEventListener('play', emit);
-audio.addEventListener('pause', emit);
-audio.addEventListener('ended', emit);
-
 function startBackgroundMusic() {
+  if (!audio) {
+    audio = new Audio();
+    audio.preload = 'none';
+    audio.loop = true;
+    audio.volume = 0.55;
+    audio.src = bgmSrc;
+    audio.addEventListener('play', emit);
+    audio.addEventListener('pause', emit);
+    audio.addEventListener('ended', emit);
+  }
   const result = audio.play();
   if (result && typeof result.catch === 'function') result.catch(() => emit());
   return result;
 }
 
 function pauseBackgroundMusic() {
-  audio.pause();
+  audio?.pause();
 }
 
 function toggleBackgroundMusic() {
-  return audio.paused ? startBackgroundMusic() : pauseBackgroundMusic();
+  return !audio || audio.paused ? startBackgroundMusic() : pauseBackgroundMusic();
 }
 
 function subscribeBackgroundMusic(listener) {
   listeners.add(listener);
-  listener(!audio.paused);
+  listener(!!audio && !audio.paused);
   return () => listeners.delete(listener);
 }
 
 function getBackgroundMusicState() {
   return {
-    paused: audio.paused,
-    currentTime: audio.currentTime,
-    duration: audio.duration,
-    loop: audio.loop,
-    volume: audio.volume,
-    src: audio.currentSrc || audio.src,
+    paused: audio?.paused ?? true,
+    currentTime: audio?.currentTime ?? 0,
+    duration: audio?.duration ?? NaN,
+    loop: audio?.loop ?? true,
+    volume: audio?.volume ?? 0.55,
+    src: audio?.currentSrc || audio?.src || bgmSrc,
   };
 }
 

@@ -9,7 +9,6 @@
  * - 核销成功后 3 秒自动恢复扫码状态；页面销毁时停止摄像头
  */
 import './staff.css';
-import { Html5Qrcode } from 'html5-qrcode';
 import { redeemClaimToken, getMe, clearAuthToken } from '../services/api.js';
 import { t } from '../i18n.js';
 
@@ -68,7 +67,6 @@ class StaffRedeemPage {
     this.nameEl = container.querySelector('.redeem-staff-name');
     this.result = container.querySelector('.redeem-result');
     this.loadIdentity();
-    this.startScanner();
     return this;
   }
 
@@ -77,10 +75,29 @@ class StaffRedeemPage {
     try {
       const me = await getMe();
       if (this.destroyed) return;
+      if (me?.role !== 'staff') {
+        this.handleIdentityInvalid();
+        return;
+      }
       if (this.nameEl) this.nameEl.textContent = (me && me.id) || '—';
+      this.showResult('');
+      await this.startScanner();
     } catch (e) {
       if (this.destroyed) return;
-      this.handleIdentityInvalid();
+      if (['AUTH_REQUIRED', 'INVALID_TOKEN', 'STAFF_REQUIRED'].includes(e?.code)) {
+        this.handleIdentityInvalid();
+        return;
+      }
+      // A temporary network failure is not evidence that the staff session expired.
+      this.showResult(e?.message || t('networkError'), false);
+      const retry = document.createElement('button');
+      retry.className = 'btn-primary';
+      retry.textContent = t('retry');
+      retry.addEventListener('click', () => {
+        retry.disabled = true;
+        this.loadIdentity();
+      });
+      this.result.appendChild(retry);
     }
   }
 
@@ -102,11 +119,12 @@ class StaffRedeemPage {
 
   async startScanner() {
     if (this.destroyed || this.identityInvalid) return;
-    if (!this.scanner) {
-      if (!this.el.querySelector('#qr-reader')) return;
-      this.scanner = new Html5Qrcode('qr-reader');
-    }
     try {
+      if (!this.scanner) {
+        const { Html5Qrcode } = await import('html5-qrcode');
+        if (this.destroyed || this.identityInvalid || !this.el.querySelector('#qr-reader')) return;
+        this.scanner = new Html5Qrcode('qr-reader');
+      }
       await this.scanner.start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 220, height: 220 } },
