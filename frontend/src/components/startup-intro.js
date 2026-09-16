@@ -1,6 +1,6 @@
-import consoleSrc from '../../地图相关素材/游戏机模板.jpg';
-import mapZhPreview from '../../地图相关素材/地图参考模板.jpg';
-import mapEnPreview from '../../地图相关素材/地图参考模板2.jpg';
+import consoleSrc from '../../地图相关素材/游戏机模板.webp';
+import mapZhPreview from '../../地图相关素材/地图参考模板.webp';
+import mapEnPreview from '../../地图相关素材/地图参考模板2.webp';
 import { isEnglish } from '../i18n.js';
 
 const mapPreviewSrc = () => (isEnglish() ? mapEnPreview : mapZhPreview);

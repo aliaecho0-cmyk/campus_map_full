@@ -8,7 +8,7 @@
  * 文件名规范化：去扩展名 → 去前导序号与空格 → 转小写、去空格与引号、×→x → 去尾部 "logo"。
  * getClubLogo(name)：别名表 → 规范化直查 → ±"社" 变体，均未命中返回 ''（沿用首字占位）。
  */
-const logoFiles = import.meta.glob('../../社团logo合集/*.{jpg,jpeg,png,JPG,JPEG,PNG}', {
+const logoFiles = import.meta.glob('../../社团logo合集/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}', {
   eager: true,
   import: 'default',
 });
@@ -30,12 +30,12 @@ for (const [path, url] of Object.entries(logoFiles)) {
 
 /** 名称与文件名对不上的社团：社团名 → 规范化后的文件名（人工确认） */
 const ALIASES = {
-  'CP食研社': '食研社', // 文件 1食研社.jpg
+  'CP食研社': '食研社', // 文件 1食研社.webp
   'CP 食研社': '食研社',
-  'English Animation 英语动画社': 'English Animator', // 13English Animator.png（Animator≠Animation）
-  'Lg足球社': '足球', // 33足球.jpg
-  '2Tired骑行社': '骑行', // 43骑行.png
-  'V8橄榄球俱乐部': 'V8橄榄球', // 42V8橄榄球.jpg
+  'English Animation 英语动画社': 'English Animator', // 13English Animator.webp（Animator≠Animation）
+  'Lg足球社': '足球', // 33足球.webp
+  '2Tired骑行社': '骑行', // 43骑行.webp
+  'V8橄榄球俱乐部': 'V8橄榄球', // 42V8橄榄球.webp
 };
 
 const used = new Set(); // dev 自检：核对是否有文件未被任何社团使用

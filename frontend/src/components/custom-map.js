@@ -13,11 +13,11 @@ import SVG_BASE_FALLBACK from './historical-map-svg.js';
 import renderSVG from './svg-canvas-renderer.js';
 import { createMapPainter, MAP_IMAGE_WIDTH, MAP_IMAGE_HEIGHT } from './map-painter.js';
 import { isEnglish } from '../i18n.js';
-import booth8HighlightSrc from '../../地图相关素材/按钮8.png';
-import npcUpLeftSrc from '../../人物素材/透明背景/up_left_foot_forward.png';
-import npcUpRightSrc from '../../人物素材/透明背景/up_right_foot_forward.png';
-import npcDownLeftSrc from '../../人物素材/透明背景/down_left_foot_forward.png';
-import npcDownRightSrc from '../../人物素材/透明背景/down_right_foot_forward.png';
+import booth8HighlightSrc from '../../地图相关素材/按钮8.webp';
+import npcUpLeftSrc from '../../人物素材/透明背景/up_left_foot_forward.webp';
+import npcUpRightSrc from '../../人物素材/透明背景/up_right_foot_forward.webp';
+import npcDownLeftSrc from '../../人物素材/透明背景/down_left_foot_forward.webp';
+import npcDownRightSrc from '../../人物素材/透明背景/down_right_foot_forward.webp';
 
 const MAP_WIDTH = canvasMap.GRID_COLS * canvasMap.CELL_PX;
 const MAP_HEIGHT = canvasMap.GRID_ROWS * canvasMap.CELL_PX;

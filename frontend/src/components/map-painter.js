@@ -1,6 +1,6 @@
 /** 参考模板底图。图片自身按 30×30 语义格绘制，交互仍使用原地图坐标。 */
-import mapZhSrc from '../../地图相关素材/地图参考模板.jpg';
-import mapEnSrc from '../../地图相关素材/地图参考模板2.jpg';
+import mapZhSrc from '../../地图相关素材/地图参考模板.webp';
+import mapEnSrc from '../../地图相关素材/地图参考模板2.webp';
 import { isEnglish } from '../i18n.js';
 
 export const MAP_IMAGE_WIDTH = 1264;
