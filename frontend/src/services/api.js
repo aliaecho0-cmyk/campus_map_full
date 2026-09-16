@@ -11,6 +11,7 @@
  * 对应后端契约：backend/docs/API.md（v1.0）
  */
 import { t } from '../i18n.js';
+import { fetchJsonWithTimeout } from './http.js';
 
 /** 后端基础地址。
  * - 开发（未设置 VITE_API_BASE）：默认打本地 3000。
@@ -22,6 +23,7 @@ export const BASE_URL = __configuredBase === undefined || __configuredBase === n
 
 /** localStorage 中 JWT 的存储 key */
 const TOKEN_KEY = 'auth_token';
+let authRevision = 0;
 
 /** 错误码 → i18n key（对应 API 契约 §1.4 通用错误码） */
 const ERROR_KEYS = {
@@ -74,6 +76,7 @@ export function getAuthToken() {
  * @param {string} token
  */
 export function setAuthToken(token) {
+  authRevision += 1;
   try {
     localStorage.setItem(TOKEN_KEY, token || '');
   } catch {}
@@ -83,6 +86,7 @@ export function setAuthToken(token) {
  * 清除 JWT（退出登录时调用）。
  */
 export function clearAuthToken() {
+  authRevision += 1;
   try {
     localStorage.removeItem(TOKEN_KEY);
   } catch {}
@@ -115,18 +119,15 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   }
 
   let response;
+  let data;
   try {
-    response = await fetch(BASE_URL + path, options);
-  } catch {
+    ({ response, data } = await fetchJsonWithTimeout(BASE_URL + path, options));
+  } catch (error) {
+    if (error?.name === 'TimeoutError') {
+      throw new ApiError('REQUEST_TIMEOUT', t('requestTimeout'));
+    }
     // fetch 层面失败（断网 / CORS / 后端未启动）统一抛出
     throw new ApiError('NETWORK_ERROR', t('networkError'));
-  }
-
-  let data = null;
-  try {
-    data = await response.json();
-  } catch {
-    // 响应无 body 或非 JSON（如 204）时保持 data = null
   }
 
   if (!response.ok) {
@@ -150,11 +151,14 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
  * @throws {ApiError} INVALID_REQUEST
  */
 export async function studentLogin(deviceId) {
+  const revision = authRevision;
   const data = await request('/api/auth/student', {
     method: 'POST',
     body: { deviceId },
     auth: false,
   });
+  // A slow background login must not replace a newer staff session or logout.
+  if (revision !== authRevision) return null;
   if (data && data.token) setAuthToken(data.token);
   return data;
 }

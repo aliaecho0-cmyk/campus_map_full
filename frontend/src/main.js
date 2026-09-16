@@ -38,16 +38,14 @@ async function showEntryAnnouncement() {
 const startupIntro = mountStartupIntro();
 window.startOnboarding = startOnboarding;
 
-// 先完成无感登录（或失败降级）再渲染，避免首屏接口 401；
-// 之后依次播放开场动画 → 语言选择 → 首个公告 → 背景配乐
-ensureLogin().finally(() => {
-  start();
-  startupIntro
-    .play()
-    .then(chooseLanguage)
-    .then(showEntryAnnouncement)
-    .catch(() => {})
-    .finally(() => {
-      state.entryReady = true;
-    });
-});
+// Render the static map immediately. Rewards and view reports await login separately.
+void ensureLogin();
+start();
+startupIntro
+  .play()
+  .then(chooseLanguage)
+  .then(showEntryAnnouncement)
+  .catch(() => {})
+  .finally(() => {
+    state.entryReady = true;
+  });

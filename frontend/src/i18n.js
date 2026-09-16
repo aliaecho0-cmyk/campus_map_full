@@ -56,6 +56,8 @@ const UI = {
     redeeming: '核销中…', redeemSuccess: '核销成功', redeemFail: '核销失败，请重试',
 
     networkError: '网络异常，请稍后重试',
+    requestTimeout: '连接超时，请稍后重试；地图和社团资料仍可浏览',
+    retry: '重试',
     err_INVALID_REQUEST: '请求参数错误',
     err_AUTH_REQUIRED: '未登录，请携带 JWT',
     err_INVALID_TOKEN: 'JWT 无效或已过期',
@@ -121,6 +123,8 @@ const UI = {
     redeeming: 'Redeeming…', redeemSuccess: 'Redeemed successfully', redeemFail: 'Redemption failed, please retry',
 
     networkError: 'Network error, please try again later',
+    requestTimeout: 'Connection timed out. Please retry; the map and club information remain available.',
+    retry: 'Retry',
     err_INVALID_REQUEST: 'Invalid request parameters',
     err_AUTH_REQUIRED: 'Not signed in, JWT required',
     err_INVALID_TOKEN: 'Invalid or expired JWT',

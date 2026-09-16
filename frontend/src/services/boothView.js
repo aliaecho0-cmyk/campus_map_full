@@ -1,4 +1,5 @@
 import { recordBoothView } from './api.js';
+import { requireLogin } from './auth.js';
 import { showToast } from '../utils/toast.js';
 import { t } from '../i18n.js';
 
@@ -74,6 +75,7 @@ export function startViewSession(boothId, delayMs = 3000) {
   async function report() {
     phase = 'reporting';
     try {
+      await requireLogin();
       const data = await recordBoothView(EVENT_ID, id);
       addReportedBooth(id);
       successData = data;
