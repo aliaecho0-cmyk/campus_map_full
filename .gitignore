@@ -19,3 +19,7 @@ backend/.claude/
 
 # 编辑器个人配置
 .vscode/
+# 服务端以仓库根为 HOME 时误生成的 dotfile 与失败构建残留（防入库）
+/.ssh/
+/.cache/
+/frontend/dist-failed-*/
