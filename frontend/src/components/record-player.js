@@ -1,5 +1,5 @@
-import baseSrc from '../../地图相关素材/底座.png';
-import recordSrc from '../../地图相关素材/唱片.png';
+import baseSrc from '../../地图相关素材/底座.webp';
+import recordSrc from '../../地图相关素材/唱片.webp';
 import { t } from '../i18n.js';
 import { subscribeBackgroundMusic, toggleBackgroundMusic } from '../services/background-music.js';
 

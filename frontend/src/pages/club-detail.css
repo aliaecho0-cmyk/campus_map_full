@@ -66,12 +66,17 @@
   flex: 1;
   min-width: 0;
 }
-.name {
+.club-detail-page .name {
   font-size: 18px;
   font-weight: 500;
   font-family: var(--font-px);
   letter-spacing: 1px;
   color: var(--text-color-primary);
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .tags {
   display: flex;

@@ -4,6 +4,7 @@ import { fetchJsonWithTimeout } from '../src/services/http.js';
 import { studentLogin, staffLogin, getAuthToken, clearAuthToken } from '../src/services/api.js';
 import { ensureLogin, requireLogin, logout } from '../src/services/auth.js';
 import { state } from '../src/state.js';
+import { startViewSession, getPendingReported, hasReported, setOnViewStatus } from '../src/services/boothView.js';
 
 const storage = new Map();
 Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
@@ -112,4 +113,56 @@ test('background auth does not overwrite newer stored staff identity', async (t)
   assert.equal(getAuthToken(), 'staff-token');
   logout();
   assert.equal(localStorage.getItem('user_role'), null);
+});
+
+test('view progress stays pending during login, then reports exactly once', async (t) => {
+  storage.clear();
+  logout();
+  const login = deferred();
+  const report = deferred();
+  const requests = [];
+  const changes = [];
+  setOnViewStatus(({ pending }) => changes.push(pending));
+  t.mock.method(globalThis, 'fetch', (url) => {
+    requests.push(url);
+    return url.endsWith('/student') ? login.promise : report.promise;
+  });
+  const session = startViewSession('pr-merge-success', 0);
+  t.after(() => { session.cancel(); setOnViewStatus(null); });
+  session.resume();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(getPendingReported(), 1);
+  assert.equal(requests.length, 1);
+  assert.ok(requests[0].endsWith('/student'));
+  login.resolve(response({ token: 'student-token', user: { role: 'student' }, eventEndAt: '2099-01-01T00:00:00Z' }));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(requests.length, 2);
+  assert.ok(requests[1].endsWith('/booths/pr-merge-success/view'));
+  report.resolve(response({ uniqueBoothCount: 1, badges: [] }));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(getPendingReported(), 0);
+  assert.equal(hasReported('pr-merge-success'), true);
+  assert.deepEqual(changes, [1, 0]);
+});
+
+test('failed login clears pending view progress without sending its write', async (t) => {
+  storage.clear();
+  logout();
+  const requests = [];
+  const changes = [];
+  setOnViewStatus(({ pending }) => changes.push(pending));
+  t.mock.method(console, 'warn', () => {});
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    requests.push(url);
+    return response({ error: { code: 'AUTH_REQUIRED', message: 'test rejection' } }, 401);
+  });
+  const session = startViewSession('pr-merge-failure', 0);
+  t.after(() => { session.cancel(); setOnViewStatus(null); });
+  session.resume();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(requests.length, 1);
+  assert.ok(requests[0].endsWith('/student'));
+  assert.equal(getPendingReported(), 0);
+  assert.equal(hasReported('pr-merge-failure'), false);
+  assert.deepEqual(changes, [1, 0]);
 });

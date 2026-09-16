@@ -45,6 +45,7 @@ const UI = {
 
     collectPlusOne: '摊位收集 +1',
     collectComplete: '摊位收集任务已完成，可领取奖励',
+    syncingBadge: '正在全力加载中…',
 
     staffLogin: '工作人员登录', enterName: '请输入姓名', login: '登录',
     invalidLink: '链接无效，请联系管理员',
@@ -112,6 +113,7 @@ const UI = {
 
     collectPlusOne: 'Booth collected +1',
     collectComplete: 'All booths collected — the reward is ready to claim',
+    syncingBadge: 'Confirming views…',
 
     staffLogin: 'Staff Login', enterName: 'Enter your name', login: 'Log in',
     invalidLink: 'Invalid link, please contact the administrator',

@@ -8,6 +8,8 @@ const REPORTED_KEY = 'reported_booths';
 
 let reportedBooths = loadReported();
 let onProgressChanged = null;
+let pendingReported = 0;
+let onViewStatus = null;
 
 function loadReported() {
   try {
@@ -43,6 +45,20 @@ export function setOnProgressChanged(fn) {
   onProgressChanged = typeof fn === 'function' ? fn : null;
 }
 
+/** 尚未被后端确认的新 distinct 上报数（在途的 N）。 */
+export function getPendingReported() {
+  return pendingReported;
+}
+
+/** 订阅在途计数变化，回调收到 { pending }。 */
+export function setOnViewStatus(fn) {
+  onViewStatus = typeof fn === 'function' ? fn : null;
+}
+
+function notifyViewStatus() {
+  if (onViewStatus) onViewStatus({ pending: pendingReported });
+}
+
 export function startViewSession(boothId, delayMs = 3000) {
   const id = String(boothId);
   let elapsedMs = 0;
@@ -74,16 +90,39 @@ export function startViewSession(boothId, delayMs = 3000) {
 
   async function report() {
     phase = 'reporting';
+    const isNewDistinct = !hasReported(id);
+    if (isNewDistinct) {
+      pendingReported++;
+      notifyViewStatus();
+    }
+    let data = null;
+    let err = null;
     try {
       await requireLogin();
-      const data = await recordBoothView(EVENT_ID, id);
-      addReportedBooth(id);
-      successData = data;
-      phase = 'succeeded';
+      data = await recordBoothView(EVENT_ID, id);
+    } catch (e) {
+      err = e;
+    }
+    if (err) {
+      if (isNewDistinct) {
+        pendingReported--;
+        notifyViewStatus();
+      }
+      phase = 'failed';
+      console.warn('[boothView] 上报失败', id, err);
+      return;
+    }
+    addReportedBooth(id);
+    if (isNewDistinct) {
+      pendingReported--;
+      notifyViewStatus();
+    }
+    successData = data;
+    phase = 'succeeded';
+    try {
       deliverSuccess();
     } catch (e) {
-      phase = 'failed';
-      console.warn('[boothView] 上报失败', id, e);
+      console.warn('[boothView] 反馈渲染失败', id, e);
     }
   }
 
