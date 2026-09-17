@@ -21,9 +21,13 @@ export function createApp() {
   // 解析 JSON 请求体
   app.use(express.json());
 
-  // 简单请求日志：方法 + 路径 + 时间
+  // 请求日志：响应完成时打点，记录状态码 + 耗时，便于运维从日志直接看出错误与慢请求
   app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl}`);
+    const start = process.hrtime.bigint();
+    res.on('finish', () => {
+      const ms = Number(process.hrtime.bigint() - start) / 1e6;
+      console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl} ${res.statusCode} ${ms.toFixed(1)}ms`);
+    });
     next();
   });
 
