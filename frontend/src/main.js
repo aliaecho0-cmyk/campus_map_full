@@ -35,17 +35,38 @@ async function showEntryAnnouncement() {
   });
 }
 
-const startupIntro = mountStartupIntro();
-window.startOnboarding = startOnboarding;
+export async function startApp({ setProgress, finish }) {
+  const startupIntro = mountStartupIntro();
+  window.startOnboarding = startOnboarding;
 
-// Render the static map immediately. Rewards and view reports await login separately.
-void ensureLogin();
-start();
-startupIntro
-  .play()
-  .then(chooseLanguage)
-  .then(showEntryAnnouncement)
-  .catch(() => {})
-  .finally(() => {
-    state.entryReady = true;
-  });
+  const page = start();
+  setProgress(65);
+
+  // Login and first-screen assets start only after the entry loader has painted.
+  let completed = 0;
+  const track = (promise) => Promise.resolve(promise).then(
+    () => { setProgress(65 + ++completed * 10); },
+    () => { setProgress(65 + ++completed * 10); },
+  );
+  const ready = Promise.all([
+    track(startupIntro.ready()),
+    track(page?.ready),
+    track(ensureLogin()),
+  ]);
+  let timeout;
+  await Promise.race([
+    ready,
+    new Promise((resolve) => { timeout = setTimeout(resolve, 10000); }),
+  ]);
+  clearTimeout(timeout);
+  await finish();
+
+  startupIntro
+    .play()
+    .then(chooseLanguage)
+    .then(showEntryAnnouncement)
+    .catch(() => {})
+    .finally(() => {
+      state.entryReady = true;
+    });
+}

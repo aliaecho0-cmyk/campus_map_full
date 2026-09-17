@@ -130,7 +130,7 @@ export class CustomMap {
     this._initCanvasSync();
     this._initNpc();
     this._bindGestures();
-    this._loadPainter();
+    this.ready = this._loadPainter();
     this._loadBooth8Highlight();
   }
 

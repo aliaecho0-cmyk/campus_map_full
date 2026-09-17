@@ -22,7 +22,7 @@ function waitForImage(image) {
 
 export function mountStartupIntro() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return { play: () => Promise.resolve() };
+    return { ready: () => Promise.resolve(), play: () => Promise.resolve() };
   }
 
   const app = document.querySelector('#app');
@@ -71,6 +71,12 @@ export function mountStartupIntro() {
   };
 
   return {
+    ready() {
+      return Promise.race([
+        Promise.all([...intro.querySelectorAll('img')].map(waitForImage)),
+        new Promise((resolve) => window.setTimeout(resolve, 8000)),
+      ]);
+    },
     play() {
       const device = intro.querySelector('.startup-intro__device');
       const images = [...intro.querySelectorAll('img')];

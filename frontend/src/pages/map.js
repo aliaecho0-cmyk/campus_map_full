@@ -103,6 +103,7 @@ class MapPage {
       onBoothCancel: () => this.onBoothCancel(),
       onUnionTap: (d) => this.onUnionTap(d),
     });
+    this.ready = this.map.ready;
 
     // 事件绑定
     this.searchInput.addEventListener('input', (e) => this.onKeywordInput(e.target.value));

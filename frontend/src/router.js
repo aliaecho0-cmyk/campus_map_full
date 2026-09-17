@@ -129,6 +129,7 @@ export function start() {
 
   window.addEventListener('hashchange', render);
   render();
+  return current;
 }
 
 export function refresh() {

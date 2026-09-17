@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="941" height="1672" viewBox="0 0 941 1672">
+  <image href="./地图相关素材/游戏机模板.webp" width="941" height="1672"/>
+  <rect x="165" y="255" width="540" height="934" rx="6" fill="#fff"/>
+  <g font-family="monospace" font-size="52" font-weight="900" letter-spacing="1" text-anchor="middle" stroke-linejoin="round">
+    <text x="442" y="697" fill="#2f2438" stroke="#2f2438" stroke-width="6" paint-order="stroke fill">Loading...</text>
+    <text x="439" y="694" fill="#6d3fa8" stroke="#6d3fa8" stroke-width="6" paint-order="stroke fill">Loading...</text>
+    <text x="435" y="690" fill="#fff7ff" stroke="#2f2438" stroke-width="5" paint-order="stroke fill">Loading...</text>
+  </g>
+  <rect x="212" y="759" width="359" height="43" fill="#c386db"/>
+  <rect x="208" y="755" width="359" height="43" fill="#fff" stroke="#2f2438" stroke-width="7"/>
+  <g fill="#925cd1">
+    <rect x="215" y="762" width="12" height="29"/>
+    <rect x="232" y="762" width="12" height="29"/>
+    <rect x="249" y="762" width="12" height="29"/>
+    <rect x="266" y="762" width="12" height="29"/>
+    <rect x="283" y="762" width="12" height="29"/>
+    <rect x="300" y="762" width="12" height="29"/>
+    <rect x="317" y="762" width="12" height="29"/>
+    <rect x="334" y="762" width="12" height="29"/>
+    <rect x="351" y="762" width="12" height="29"/>
+    <rect x="368" y="762" width="12" height="29"/>
+    <rect x="385" y="762" width="12" height="29"/>
+    <rect x="402" y="762" width="12" height="29"/>
+    <rect x="419" y="762" width="12" height="29"/>
+  </g>
+  <g fill="#a574dc">
+    <rect x="266" y="762" width="12" height="29"/>
+    <rect x="334" y="762" width="12" height="29"/>
+    <rect x="402" y="762" width="12" height="29"/>
+  </g>
+  <text x="650" y="789" text-anchor="end" fill="#2f2438" font-family="monospace" font-size="30" font-weight="bold">65%</text>
+</svg>
