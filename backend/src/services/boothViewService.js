@@ -3,9 +3,21 @@ import { findById as findEventById, isActive } from '../repositories/eventReposi
 import * as boothView from '../repositories/boothViewRepository.js';
 import { findByEventIdAndCode as findBadge } from '../repositories/badgeRepository.js';
 import * as userBadge from '../repositories/userBadgeRepository.js';
+import { createBatchQueue } from './batchQueue.js';
 
 const DEVICE_ID_RE = /^dev_\d+_[A-Za-z0-9]{8}$/;
 const BADGE_CODE = 'knowitall';
+
+// view_count 纯统计累加，异步批写（200ms / 攒满 maxBatch 先到先得，单事务批量 UPDATE）
+const viewQueue = createBatchQueue({
+  processor: (batch) =>
+    withTransaction(
+      (db) => boothView.incrementViewCountBatch(batch, db),
+      { immediate: true }
+    ),
+  intervalMs: 200,
+  maxBatch: 100,
+});
 
 /**
  * @typedef {object} BoothViewResult
@@ -52,7 +64,7 @@ export function recordView(eventId, boothId, deviceId) {
   requireActiveEvent(eventId);
 
   return withTransaction((db) => {
-    boothView.upsert(eventId, deviceId, boothId, db);
+    boothView.ensureRow(eventId, deviceId, boothId, db);
     const uniqueBoothCount = boothView.countDistinctBooths(eventId, deviceId, db);
     const badge = findBadge(eventId, BADGE_CODE, db);
 
@@ -62,6 +74,9 @@ export function recordView(eventId, boothId, deviceId) {
     }
     const unlocked = badge ? userBadge.isUnlocked(deviceId, badge.id, db) : false;
 
+    // 纯统计累计（view_count+1, last_viewed_at）异步批写，不入事务、不阻塞返回
+    viewQueue.push({ eventId, deviceId, boothId, ts: Date.now() });
+
     return {
       eventId,
       boothId,
@@ -69,6 +84,11 @@ export function recordView(eventId, boothId, deviceId) {
       badges: badgeProgress(badge, unlocked),
     };
   });
+}
+
+/** 供 server.js 优雅退出时冲刷未落库的浏览统计 */
+export function flushViewQueue() {
+  viewQueue.flushNow();
 }
 
 /**

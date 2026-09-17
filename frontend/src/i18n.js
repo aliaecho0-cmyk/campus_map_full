@@ -69,6 +69,7 @@ const UI = {
     err_EVENT_NOT_ACTIVE: '活动当前不可用',
     err_CLAIM_TOKEN_EXPIRED: '已超过活动截止时间',
     err_CLAIM_TOKEN_REDEEMED: '领取码已经核销',
+    err_SQLITE_BUSY: '数据库繁忙，请稍后重试',
   },
   en: {
     appTitle: 'Clubs Fair · Event Guide',
@@ -137,6 +138,7 @@ const UI = {
     err_EVENT_NOT_ACTIVE: 'Event is not available',
     err_CLAIM_TOKEN_EXPIRED: 'Past the event deadline',
     err_CLAIM_TOKEN_REDEEMED: 'Claim code already redeemed',
+    err_SQLITE_BUSY: 'Database busy, please try again later',
   },
 };
 

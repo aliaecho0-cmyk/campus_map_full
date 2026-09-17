@@ -132,14 +132,15 @@ export function getClaimToken(deviceId) {
     throw new Error('BADGE_NOT_UNLOCKED');
   }
 
-  // 首签 + 读取放入同一事务；insertIgnore 由 UNIQUE(device_id) 兜底并发
+  // 首签 + 读取放入同一事务；insertIgnore 由 UNIQUE(device_id) 兜底并发。
+  // immediate：以写者身份开启，避免“读后升级写”触发 SQLITE_BUSY_SNAPSHOT。
   const row = withTransaction((db) => {
     const existing = claimToken.findByDeviceId(deviceId, db);
     if (existing) return existing;
     const token = generateClaimToken();
     claimToken.insertIgnore(deviceId, hashToken(token), token, db);
     return claimToken.findByDeviceId(deviceId, db);
-  });
+  }, { immediate: true });
 
   if (row.status === 'redeemed') throw new Error('CLAIM_TOKEN_REDEEMED');
   return { claimToken: row.token_ciphertext, claimStatus: 'active', eventEndAt: toIso(event.end_at) };

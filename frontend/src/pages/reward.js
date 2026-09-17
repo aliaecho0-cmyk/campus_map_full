@@ -143,6 +143,14 @@ class RewardPage {
     if (!body) return;
     if (err) {
       body.innerHTML = `<div class="reward-empty">${escapeHtml((err && err.message) || t('networkError'))}</div>`;
+      const retry = document.createElement('button');
+      retry.className = 'btn-primary';
+      retry.textContent = t('retry');
+      retry.addEventListener('click', () => {
+        retry.disabled = true;
+        this.refresh();
+      });
+      body.appendChild(retry);
       return;
     }
     const b = this.badge;

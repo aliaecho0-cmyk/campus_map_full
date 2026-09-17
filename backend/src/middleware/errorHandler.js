@@ -13,6 +13,7 @@ export const HTTP_STATUS_BY_CODE = {
   CLAIM_TOKEN_EXPIRED: 409,
   CLAIM_TOKEN_REDEEMED: 409,
   PAYLOAD_TOO_LARGE: 413,
+  SQLITE_BUSY: 503,
 };
 
 export const CODE_MESSAGE = {
@@ -27,6 +28,7 @@ export const CODE_MESSAGE = {
   CLAIM_TOKEN_EXPIRED: '已超过活动截止时间',
   CLAIM_TOKEN_REDEEMED: '领取码已经核销',
   PAYLOAD_TOO_LARGE: '请求体过大',
+  SQLITE_BUSY: '数据库繁忙，请稍后重试',
   INTERNAL_SERVER_ERROR: '服务器内部错误',
 };
 
@@ -37,6 +39,24 @@ export const CODE_MESSAGE = {
  */
 export function statusForCode(code) {
   return HTTP_STATUS_BY_CODE[code];
+}
+
+/**
+ * 判断是否为 SQLite 忙类错误（写锁竞争 / 快照冲突），这类错误可重试。
+ * node:sqlite 抛错时 err.errcode 为 SQLite 结果码：5 = SQLITE_BUSY，517 = SQLITE_BUSY_SNAPSHOT；
+ * 也可能以 message/errstr 文本形式出现（如 "database is locked"）。
+ * @param {Error} err
+ * @returns {boolean}
+ */
+export function isSqliteBusy(err) {
+  if (!err) return false;
+  const text = [
+    typeof err.message === 'string' ? err.message : '',
+    typeof err.code === 'string' ? err.code : '',
+    typeof err.errstr === 'string' ? err.errstr : '',
+  ].join(' ');
+  if (/database (?:table )?is locked|SQLITE_BUSY/i.test(text)) return true;
+  return err.errcode === 5 || err.errcode === 517;
 }
 
 /**
@@ -75,6 +95,10 @@ export function errorHandler(err, req, res, next) {
     // 其它带 4xx status 的错误（如 strict 模式拒绝非对象 body）直接采用；5xx 不在此分支
     status = err.status;
     code = err.status === 413 ? 'PAYLOAD_TOO_LARGE' : 'INVALID_REQUEST';
+  } else if (isSqliteBusy(err)) {
+    // 数据库忙（锁竞争/快照冲突）：可重试，映射 503 而非 500
+    status = 503;
+    code = 'SQLITE_BUSY';
   } else {
     status = 500;
     code = 'INTERNAL_SERVER_ERROR';

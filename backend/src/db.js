@@ -19,6 +19,26 @@ export function resolveDbPath() {
   return path.isAbsolute(fromEnv) ? fromEnv : path.resolve(DB_DIR, fromEnv);
 }
 
+// WAL 只在启动时首个连接执行一次（PASSIVE autocheckpoint 由 SQLite 维护）
+let walInitialized = false;
+
+/**
+ * 应用启动时调用一次：将数据库文件切到 WAL 模式（文件级持久设置，幂等）。
+ * 幂等：重复调用无害，但只执行一次后续连接不重复执行（BACKEND_PLAN 用户约束 #3）。
+ * @returns {string} 当前 journal_mode
+ */
+export function initWAL() {
+  if (walInitialized) return 'wal';
+  const db = new DatabaseSync(resolveDbPath());
+  try {
+    const { journal_mode } = db.prepare('PRAGMA journal_mode = WAL').get();
+    walInitialized = true;
+    return journal_mode;
+  } finally {
+    db.close();
+  }
+}
+
 /**
  * 打开一个新的数据库连接。
  * 每个连接建立时开启外键约束与忙等待超时（BACKEND_PLAN §13.4）。
