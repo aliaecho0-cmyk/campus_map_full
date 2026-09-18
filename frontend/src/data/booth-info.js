@@ -62,8 +62,8 @@ export const BOOTH_INFO = {
   },
   "TIDE Club": {
     "nameEn": "TIDE Club",
-    "intro": "人工智能学院下属的学生组织",
-    "introEn": "A student organization under School of Artificial Intelligence (SAI).",
+    "intro": "TIDE Club（Technology, Innovation, Design, Education） 是由人工智能学院指导、学生自主运营的学术实践型学生组织，以\"为青年人服务\"为宗旨，致力于数据科学与人工智能领域的实践与探索。我们希望通过项目实践、学术交流、产学研合作和同伴共学， 帮助同学们在课堂之外拓展技术视野、连接更多资源，并逐步积累可以沉淀和展示的学习与实践成果。",
+    "introEn": "TIDE Club (Technology, Innovation, Design, Education) is an academic and practice-oriented student organization guided by the School of Artificial Intelligence and run by students. With a mission to \"serve young people,\" it is dedicated to practice and exploration in data science and artificial intelligence. Through projects, academic exchanges, industry-university-research collaboration, and peer learning, we hope to help students broaden their technical horizons beyond the classroom, connect with more resources, and gradually build learning and practical achievements they can document and showcase.",
     "email": "",
     "gameRules": "",
     "gameRulesEn": ""
